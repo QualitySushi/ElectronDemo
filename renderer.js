@@ -93,3 +93,115 @@ btn.addEventListener('click', async () => {
     filePathElement.innerText = filePath
   }
 })
+
+// ==========================================
+// --- BOIDS CROWD DYNAMICS SIMULATION ---
+// ==========================================
+const canvas = document.getElementById('simulationCanvas')
+if (canvas) {
+  const ctx = canvas.getContext('2d')
+  const statusEl = document.getElementById('sim-status')
+
+  const sepSlider = document.getElementById('separation')
+  const alignSlider = document.getElementById('alignment')
+  const cohSlider = document.getElementById('cohesion')
+
+  const sepVal = document.getElementById('sep-val')
+  const alignVal = document.getElementById('align-val')
+  const cohVal = document.getElementById('coh-val')
+
+  let latestParticles = []
+  let ws = null
+
+  // DESIGN DEFENSE: Establish connection to Express gateway WebSocket proxy (Port 4000)
+  function connectWebSocket() {
+    if (statusEl) {
+      statusEl.innerText = 'Connecting to Gateway...'
+      statusEl.style.background = '#334155'
+    }
+
+    ws = new WebSocket('ws://localhost:5000')
+
+    ws.onopen = () => {
+      if (statusEl) {
+        statusEl.innerText = 'Status: Connected (Live Stream)'
+        statusEl.style.background = '#065f46' // Green success tint
+      }
+      sendConfigUpdate()
+    }
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.particles) {
+          latestParticles = data.particles
+        }
+      } catch (err) {
+        console.error('Failed to parse incoming WebSocket frame:', err)
+      }
+    }
+
+    ws.onclose = () => {
+      if (statusEl) {
+        statusEl.innerText = 'Status: Disconnected. Retrying...'
+        statusEl.style.background = '#991b1b' // Red error tint
+      }
+      // Reconnection fallback timer
+      setTimeout(connectWebSocket, 2000)
+    }
+
+    ws.onerror = (err) => {
+      console.error('WebSocket error encountered:', err)
+      ws.close()
+    }
+  }
+
+  // Send parameter changes upstream when sliders move
+  function sendConfigUpdate() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      const payload = {
+        separation_weight: parseFloat(sepSlider.value),
+        alignment_weight: parseFloat(alignSlider.value),
+        cohesion_weight: parseFloat(cohSlider.value)
+      }
+      ws.send(JSON.stringify(payload))
+    }
+  }
+
+  if (sepSlider && alignSlider && cohSlider) {
+    sepSlider.addEventListener('input', (e) => { sepVal.innerText = e.target.value; sendConfigUpdate(); })
+    alignSlider.addEventListener('input', (e) => { alignVal.innerText = e.target.value; sendConfigUpdate(); })
+    cohSlider.addEventListener('input', (e) => { cohVal.innerText = e.target.value; sendConfigUpdate(); })
+  }
+
+  // --- RENDER LOOP ---
+  // DESIGN DEFENSE: Decouple render frequency from network packets using requestAnimationFrame 
+  // for butter-smooth visual interpolation on the HTML5 canvas.
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Render background grid lines for a technical dashboard aesthetic
+    ctx.strokeStyle = '#1e293b'
+    ctx.lineWidth = 1
+    for (let x = 0; x < canvas.width; x += 50) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y < canvas.height; y += 50) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+    }
+
+    // Render flocking particles
+    ctx.fillStyle = '#38bdf8'
+    for (const p of latestParticles) {
+      ctx.beginPath()
+      ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    requestAnimationFrame(render)
+  }
+
+  // Initialize connection and start paint loop
+  connectWebSocket()
+  requestAnimationFrame(render)
+}

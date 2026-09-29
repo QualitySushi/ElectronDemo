@@ -2,7 +2,8 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <!-- DESIGN DEFENSE: Explicitly add connect-src to allow local WebSocket communication with the Express Gateway -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:5000 http://localhost:5000" />
     <title>Electron Showcase App</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -42,6 +43,38 @@
         <!-- Ping Test -->
         <button id="pingBtn">Test IPC Ping</button>
         <p>Ping Status: <span id="pingStatus">Not tested</span></p>
+      </div>
+
+      <!-- Boids Crowd Dynamics Simulation Showcase -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h3>Boids Compute Engine (Polyglot Live Stream)</h3>
+        <div id="sim-status" style="font-size: 0.8rem; padding: 6px; border-radius: 4px; text-align: center; background: #334155; margin-bottom: 15px;">Connecting to Gateway...</div>
+        
+        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+          <!-- Controls Column -->
+          <div style="display: flex; flex-direction: column; gap: 12px; min-width: 220px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.85rem; color: #94a3b8;">Separation Force: <span id="sep-val">1.5</span></label>
+              <input type="range" id="separation" min="0.0" max="5.0" step="0.1" value="1.5">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.85rem; color: #94a3b8;">Alignment Force: <span id="align-val">1.0</span></label>
+              <input type="range" id="alignment" min="0.0" max="5.0" step="0.1" value="1.0">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <label style="font-size: 0.85rem; color: #94a3b8;">Cohesion Force: <span id="coh-val">1.0</span></label>
+              <input type="range" id="cohesion" min="0.0" max="5.0" step="0.1" value="1.0">
+            </div>
+          </div>
+
+          <!-- Canvas Rendering Column -->
+          <!-- DESIGN DEFENSE: Added min-width: 0 to allow flex container to shrink, and responsive sizing on canvas -->
+          <div style="flex-grow: 1; min-width: 0; display: flex; justify-content: center; background: #090d16; padding: 10px; border-radius: 8px;">
+            <canvas id="simulationCanvas" width="800" height="500" style="background: #0f172a; border-radius: 4px; width: 100%; height: auto; max-width: 100%;"></canvas>
+          </div>
+        </div>
       </div>
 
     </div>
