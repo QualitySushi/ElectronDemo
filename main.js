@@ -17,7 +17,7 @@ const createWindow = () => {
         preload: path.join(__dirname, 'preload.js')
     }
   })
-  win.loadFile('index.html')
+  win.loadFile(path.join(__dirname, 'renderer', 'index.html'))
 
   // Intercept the close button to minimize-to-tray instead of quitting
   win.on('close', (event) => {

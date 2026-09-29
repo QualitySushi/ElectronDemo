@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8" />
-    <!-- DESIGN DEFENSE: Explicitly add connect-src to allow local WebSocket communication with the Express Gateway -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:5000 http://localhost:5000" />
+    <meta charset="UTF-8">
+    <!-- Content Security Policy allowing local scripts, WebSockets, and fetch requests -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws://localhost:8000 http://localhost:8000;">
     <title>Electron Showcase App</title>
     <link rel="stylesheet" href="styles.css" />
+
+    <!-- Import map to resolve bare module specifiers in the browser -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+        }
+      }
+    </script>
   </head>
   <body>
     <div class="container">
@@ -21,6 +30,38 @@
         <h3>Preferences</h3>
         <p>Current Theme: <strong id="themeLabel">Loading...</strong></p>
         <button id="themeToggleBtn">Toggle Theme</button>
+      </div>
+
+      <!-- Satellite Telemetry 3D Globe Showcase -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h3>Orbital Mechanics & Proximity Mesh (Live 3D View)</h3>
+        <div id="sat-status" style="font-size: 0.8rem; padding: 6px; border-radius: 4px; text-align: center; background: #334155; margin-bottom: 15px;">Connecting to Tracker...</div>
+        
+        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+          <!-- Telemetry Sidebar Info -->
+          <div class="sidebar-section">
+            <button id="refreshSatBtn" style="width: 100%; background: #2563eb; color: #fff; border: none; padding: 6px; border-radius: 4px; margin-bottom: 12px; cursor: pointer;">Refresh Data Snapshot</button>
+            
+            <!-- Coordinates First -->
+            <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <div>X Position: <span id="sat-x">--</span> km</div>
+              <div>Y Position: <span id="sat-y">--</span> km</div>
+              <div>Z Position: <span id="sat-z">--</span> km</div>
+              <div>Last Update: <span id="sat-time">--</span></div>
+            </div>
+
+            <!-- Selector / Tracked Object Dropdown Below -->
+            <label for="satSelector"><strong>Tracked Object:</strong></label>
+            <select id="satSelector" style="width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 4px; border-radius: 4px;">
+              <option value="">Click refresh to load...</option>
+            </select>
+          </div>
+
+          <!-- 3D Globe Canvas Container -->
+          <div style="flex-grow: 1; min-width: 0; display: flex; justify-content: center; background: #090d16; padding: 10px; border-radius: 8px;">
+            <div id="globeContainer" style="width: 100%; height: 450px; border-radius: 4px; overflow: hidden;"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Features Showcase -->
@@ -70,7 +111,6 @@
           </div>
 
           <!-- Canvas Rendering Column -->
-          <!-- DESIGN DEFENSE: Added min-width: 0 to allow flex container to shrink, and responsive sizing on canvas -->
           <div style="flex-grow: 1; min-width: 0; display: flex; justify-content: center; background: #090d16; padding: 10px; border-radius: 8px;">
             <canvas id="simulationCanvas" width="800" height="500" style="background: #0f172a; border-radius: 4px; width: 100%; height: auto; max-width: 100%;"></canvas>
           </div>
@@ -79,6 +119,7 @@
 
     </div>
 
-    <script src="./renderer.js"></script>
+    <!-- DESIGN DEFENSE: Added type="module" to enable Three.js ES module resolution -->
+    <script type="module" src="./js/app.js"></script>
   </body>
 </html>
