@@ -2,19 +2,50 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <title>Hello from Electron renderer!</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'" />
+    <title>Electron Showcase App</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <h1>Hello from Electron renderer!</h1>
-    <p id="info"></p>
+    <div class="container">
+      
+      <!-- Header / System Info -->
+      <div class="card">
+        <h1>Electron Showcase</h1>
+        <p id="info"></p>
+      </div>
+
+      <!-- Theme Preference -->
+      <div class="card">
+        <h3>Preferences</h3>
+        <p>Current Theme: <strong id="themeLabel">Loading...</strong></p>
+        <button id="themeToggleBtn">Toggle Theme</button>
+      </div>
+
+      <!-- Features Showcase -->
+      <div class="card">
+        <h3>Native Features</h3>
+        
+        <!-- File Dialog -->
+        <button id="btn">Open File Dialog</button>
+        <p>Selected File: <span id="filePath">None</span></p>
+        <hr>
+
+        <!-- Notifications -->
+        <button id="notifyBtn">Show Desktop Notification</button>
+        <hr>
+
+        <!-- External URL -->
+        <p>External Link Test: <a href="#" id-link="https://www.electronjs.org" class="external-link">Electron Documentation</a></p>
+        <hr>
+
+        <!-- Ping Test -->
+        <button id="pingBtn">Test IPC Ping</button>
+        <p>Ping Status: <span id="pingStatus">Not tested</span></p>
+      </div>
+
+    </div>
+
+    <script src="./renderer.js"></script>
   </body>
-  <script src="./renderer.js"></script>
 </html>
