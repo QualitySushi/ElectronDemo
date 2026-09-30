@@ -17,6 +17,7 @@ let cohSlider = null
 let sepVal = null
 let alignVal = null
 let cohVal = null
+let saveBtn = null
 
 export function initSimulation() {
     if (isInitialized) {
@@ -35,26 +36,17 @@ export function initSimulation() {
         return
     }
 
-    statusEl =
-        document.getElementById('sim-status')
+    statusEl = document.getElementById('sim-status')
 
-    sepSlider =
-        document.getElementById('separation')
+    sepSlider = document.getElementById('separation')
+    alignSlider = document.getElementById('alignment')
+    cohSlider = document.getElementById('cohesion')
 
-    alignSlider =
-        document.getElementById('alignment')
+    sepVal = document.getElementById('sep-val')
+    alignVal = document.getElementById('align-val')
+    cohVal = document.getElementById('coh-val')
 
-    cohSlider =
-        document.getElementById('cohesion')
-
-    sepVal =
-        document.getElementById('sep-val')
-
-    alignVal =
-        document.getElementById('align-val')
-
-    cohVal =
-        document.getElementById('coh-val')
+    saveBtn = document.getElementById('save-simulation-btn')
 
     isInitialized = true
 
@@ -77,6 +69,10 @@ export function initSimulation() {
             'input',
             handleCohesionInput
         )
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', handleSaveConfiguration)
     }
 
     connectWebSocket()
@@ -131,6 +127,10 @@ export function destroySimulation() {
         )
     }
 
+    if (saveBtn) {
+        saveBtn.removeEventListener('click', handleSaveConfiguration)
+    }
+
     // Prevent socket callbacks from
     // reconnecting after destruction.
     if (ws) {
@@ -167,8 +167,29 @@ export function destroySimulation() {
     sepVal = null
     alignVal = null
     cohVal = null
+    saveBtn = null
 
     console.log('[Simulation] Module disabled.')
+}
+
+export function exportSimulationSnapshot(filename = 'simulation-snapshot.png') {
+    if (!isInitialized || !canvas) {
+        console.warn('[Simulation] Cannot export snapshot: Module not initialized.')
+        return null
+    }
+
+    const dataURL = canvas.toDataURL('image/png')
+
+    // Automatically trigger file download
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = dataURL
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    console.log('[Simulation] Snapshot saved successfully.')
+    return dataURL
 }
 
 function handleSeparationInput(event) {
@@ -193,6 +214,41 @@ function handleCohesionInput(event) {
     }
 
     sendConfigUpdate()
+}
+
+async function handleSaveConfiguration() {
+    if (!isInitialized) return
+
+    const payload = {
+        simulation_type: 'boids',
+        sub_type: 'flocking',
+        configuration: {
+            separation: sepSlider ? parseFloat(sepSlider.value) : 1.5,
+            alignment: alignSlider ? parseFloat(alignSlider.value) : 1.0,
+            cohesion: cohSlider ? parseFloat(cohSlider.value) : 1.0
+        }
+    }
+
+    console.log('[Simulation] Saving configuration to database...', payload)
+
+    try {
+        // Invoking the IPC method exposed by preload.js
+        const result = await window.versions.saveSimulation(payload)
+
+        if (result && result.success) {
+            console.log('[Simulation] Successfully saved to database!')
+            if (statusEl) {
+                statusEl.innerText = 'Status: Configuration saved to history!'
+            }
+        } else {
+            console.error('[Simulation] Failed to save configuration:', result?.error)
+            if (statusEl) {
+                statusEl.innerText = 'Status: Failed to save configuration.'
+            }
+        }
+    } catch (err) {
+        console.error('[Simulation] Error invoking save IPC:', err)
+    }
 }
 
 function connectWebSocket() {

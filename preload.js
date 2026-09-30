@@ -11,5 +11,11 @@ contextBridge.exposeInMainWorld('versions', {
   showNotification: (title, body) => ipcRenderer.invoke('show-notification', { title, body }),
   openExternal: (url) => ipcRenderer.invoke('open-external-url', url),
   onGlobalShortcut: (callback) => ipcRenderer.on('global-shortcut-triggered', () => callback()),
-  // we can also expose variables, not just functions
+  getSimulationHistory: () => ipcRenderer.invoke('simulation:getHistory'),
+  saveSimulation: (payload) => ipcRenderer.invoke('simulation:save', payload),
+  
+  // --- Authentication Exposed APIs ---
+  login: (credentials) => ipcRenderer.invoke('auth:login', credentials),
+  register: (credentials) => ipcRenderer.invoke('auth:register', credentials),
+  logout: () => ipcRenderer.invoke('auth:logout'),
 })

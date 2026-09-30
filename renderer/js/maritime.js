@@ -13,6 +13,9 @@ let isInitialized = false;
 let animationFrameId = null;
 let reconnectTimeoutId = null;
 
+// Button element for saving config/snapshot
+let exportSimSnapshotBtn = null;
+
 // Native 2D Pan & Zoom state for Orthographic Camera
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
@@ -47,7 +50,8 @@ export function initMaritimeModule() {
 
     renderer = new THREE.WebGLRenderer({
         antialias: true,
-        alpha: true
+        alpha: true,
+        preserveDrawingBuffer: true // Required to capture reliable canvas snapshots
     });
 
     renderer.setSize(width, height);
@@ -69,6 +73,12 @@ export function initMaritimeModule() {
 
     scene.add(ambientLight);
     scene.add(meshGroup);
+
+    // Bind save / snapshot button
+    exportSimSnapshotBtn = document.getElementById('exportMaritimeSnapshotBtn');
+    if (exportSimSnapshotBtn) {
+        exportSimSnapshotBtn.addEventListener('click', handleSaveMaritimeConfiguration);
+    }
 
     canvas.addEventListener(
         'pointerdown',
@@ -129,6 +139,11 @@ export function destroyMaritimeModule() {
     if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
+    }
+
+    if (exportSimSnapshotBtn) {
+        exportSimSnapshotBtn.removeEventListener('click', handleSaveMaritimeConfiguration);
+        exportSimSnapshotBtn = null;
     }
 
     const canvas = renderer?.domElement;
@@ -220,6 +235,64 @@ export function destroyMaritimeModule() {
     }
 
     console.log('[Maritime] Module disabled.');
+}
+
+export function exportMaritimeSnapshot(filename = 'maritime-snapshot.png') {
+    if (!isInitialized || !renderer) {
+        console.warn('[Maritime] Cannot export snapshot: Module not initialized.');
+        return null;
+    }
+
+    // Force a render frame to ensure the canvas is up to date
+    renderer.render(scene, camera);
+
+    const canvas = renderer.domElement;
+    const dataURL = canvas.toDataURL('image/png');
+
+    // Automatically trigger a file download if running in a browser environment
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = dataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    console.log('[Maritime] Snapshot saved successfully.');
+    return dataURL;
+}
+
+async function handleSaveMaritimeConfiguration() {
+    if (!isInitialized) return;
+
+    const payload = {
+        simulation_type: 'maritime',
+        sub_type: 'ais_drift',
+        configuration: {
+            zoom: cameraZoom,
+            pan_x: cameraPan.x,
+            pan_y: cameraPan.y
+        }
+    };
+
+    console.log('[Maritime] Saving configuration to database...', payload);
+
+    try {
+        const result = await window.versions.saveSimulation(payload);
+
+        if (result && result.success) {
+            console.log('[Maritime] Successfully saved to database!');
+            if (maritimeStatusEl) {
+                maritimeStatusEl.innerText = 'Status: Configuration saved to history!';
+            }
+        } else {
+            console.error('[Maritime] Failed to save configuration:', result?.error);
+            if (maritimeStatusEl) {
+                maritimeStatusEl.innerText = 'Status: Failed to save configuration.';
+            }
+        }
+    } catch (err) {
+        console.error('[Maritime] Error invoking save IPC:', err);
+    }
 }
 
 function handlePointerDown(event) {

@@ -41,17 +41,22 @@
           <strong id="themeLabel">Loading...</strong>
         </p>
 
-        <button id="themeToggleBtn">
-          Toggle Theme
-        </button>
+        <div class="flex-column gap-sm">
+          <button id="themeToggleBtn" class="btn-fullblue">
+            Toggle Theme
+          </button>
+
+          <button id="logoutBtn" class="btn-fullred btn-danger">
+            Log Out
+          </button>
+        </div>
       </div>
 
       <!-- Module Controls -->
       <div class="card">
         <h3>Modules</h3>
 
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-
+        <div class="flex-column gap-sm">
           <label>
             <input type="checkbox" id="enableSimulation">
             Enable Boids Simulation
@@ -71,37 +76,32 @@
             <input type="checkbox" id="enableAttractor">
             Enable Attractors
           </label>
-
         </div>
       </div>
 
       <!-- Satellite Telemetry 3D Globe Showcase -->
-      <div class="card" style="grid-column: 1 / -1;">
+      <div class="card span-full">
         <h3>Orbital Mechanics & Proximity Mesh (Live 3D View)</h3>
 
-        <div
-          id="sat-status"
-          style="font-size: 0.8rem; padding: 6px; border-radius: 4px; text-align: center; background: #334155; margin-bottom: 15px;"
-        >
+        <div id="sat-status" class="status-badge">
           Disabled
         </div>
 
-        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+        <div class="showcase-grid">
 
           <!-- Telemetry Sidebar Info -->
           <div class="sidebar-section">
-
-            <button
-              id="refreshSatBtn"
-              style="width: 100%; background: #2563eb; color: #fff; border: none; padding: 6px; border-radius: 4px; margin-bottom: 12px; cursor: pointer;"
-            >
+            <button id="refreshSatBtn" class="btn-full">
               Refresh Data Snapshot
             </button>
 
+            <!-- Export Globe Snapshot Button -->
+            <button id="exportSatSnapshotBtn" class="btn-full btn-success">
+              Save Globe Snapshot
+            </button>
+
             <!-- Coordinates First -->
-            <div
-              style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;"
-            >
+            <div class="coordinates-list">
               <div>
                 X Position:
                 <span id="sat-x">--</span> km
@@ -128,58 +128,37 @@
               <strong>Tracked Object:</strong>
             </label>
 
-            <select
-              id="satSelector"
-              style="width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 4px; border-radius: 4px;"
-            >
+            <select id="satSelector">
               <option value="">
                 Click refresh to load...
               </option>
             </select>
-
           </div>
 
           <!-- 3D Globe Canvas Container -->
-          <div
-            style="flex-grow: 1; min-width: 0; display: flex; justify-content: center; background: #090d16; padding: 10px; border-radius: 8px;"
-          >
-            <div
-              id="globeContainer"
-              style="width: 100%; height: 450px; border-radius: 4px; overflow: hidden;"
-            ></div>
+          <div class="canvas-container-wrapper">
+            <div id="globeContainer"></div>
           </div>
 
         </div>
       </div>
 
       <!-- Maritime Voronoi Mesh Grid Showcase -->
-      <div class="card" style="grid-column: 1 / -1;">
+      <div class="card span-full">
         <h3>Dynamic Maritime Voronoi Traffic Grid (Live WS Stream)</h3>
 
-        <div
-          id="maritime-status"
-          style="font-size: 0.8rem; padding: 6px; border-radius: 4px; text-align: center; background: #334155; margin-bottom: 15px;"
-        >
+        <div id="maritime-status" class="status-badge">
           Disabled
         </div>
 
-        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+        <div class="showcase-grid">
 
           <!-- Telemetry Sidebar Info -->
-          <div
-            class="sidebar-section"
-            style="min-width: 220px; display: flex; flex-direction: column; gap: 12px;"
-          >
-
-            <div
-              style="display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem;"
-            >
+          <div class="sidebar-section maritime-sidebar">
+            <div class="maritime-stats">
               <div>
                 Stream Status:
-                <strong
-                  id="maritime-mode"
-                  style="color: #38bdf8;"
-                >
+                <strong id="maritime-mode" class="text-accent">
                   DISABLED
                 </strong>
               </div>
@@ -190,25 +169,63 @@
               </div>
             </div>
 
-            <p
-              style="font-size: 0.8rem; color: #94a3b8; line-height: 1.4;"
-            >
-              Computes real-time SciPy spatial tessellation over live marine
-              traffic feeds or continuous fallback drift patterns.
+            <p class="description-muted">
+              Computes real-time SciPy spatial tessellation over live marine traffic feeds or continuous fallback drift patterns.
             </p>
 
+            <!-- Export Mesh Snapshot Button -->
+            <button id="exportMaritimeSnapshotBtn" class="btn-full btn-success">
+              Save Mesh Snapshot
+            </button>
           </div>
 
           <!-- 3D Globe / Canvas Viewport Container -->
-          <div
-            style="flex-grow: 1; min-width: 0; display: flex; justify-content: center; background: #090d16; padding: 10px; border-radius: 8px;"
-          >
-            <div
-              id="maritimeContainer"
-              style="width: 100%; height: 450px; border-radius: 4px; overflow: hidden;"
-            ></div>
+          <div class="canvas-container-wrapper">
+            <div id="maritimeContainer"></div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- Simulation History Log Showcase -->
+      <div class="card span-full">
+        <h3>Simulation History Log</h3>
+        <p class="description-muted mb-md">
+          Inspect, filter, and review your persisted simulation state snapshots fetched from the backend server.
+        </p>
+
+        <div class="filter-wrapper">
+          <label for="historyFilter">
+            Filter By:
+          </label>
+          <select id="historyFilter" class="filter-select">
+            <option value="all">All Simulations</option>
+            <option value="boids">Boids (Flocking)</option>
+            <option value="attractor">Strange Attractors</option>
+            <option value="satellite">Satellite Tracking</option>
+            <option value="maritime">Maritime Simulation</option>
+          </select>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Sub-Type</th>
+                <th>Timestamp</th>
+                <th class="text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr>
+                <td colspan="5" class="table-loading">
+                  Loading history logs...
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -258,33 +275,23 @@
           Ping Status:
           <span id="pingStatus">Not tested</span>
         </p>
-
       </div>
 
       <!-- Boids Crowd Dynamics Simulation Showcase -->
-      <div class="card" style="grid-column: 1 / -1;">
+      <div class="card span-full">
         <h3>Boids Compute Engine (Polyglot Live Stream)</h3>
 
-        <div
-          id="sim-status"
-          style="font-size: 0.8rem; padding: 6px; border-radius: 4px; text-align: center; background: #334155; margin-bottom: 15px;"
-        >
+        <div id="sim-status" class="status-badge">
           Disabled
         </div>
 
-        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+        <div class="showcase-grid">
 
           <!-- Controls Column -->
-          <div
-            style="display: flex; flex-direction: column; gap: 12px; min-width: 220px;"
-          >
+          <div class="sidebar-section">
 
-            <div
-              style="display: flex; flex-direction: column; gap: 4px;"
-            >
-              <label
-                style="font-size: 0.85rem; color: #94a3b8;"
-              >
+            <div class="input-group-range">
+              <label>
                 Separation Force:
                 <span id="sep-val">1.5</span>
               </label>
@@ -299,12 +306,8 @@
               >
             </div>
 
-            <div
-              style="display: flex; flex-direction: column; gap: 4px;"
-            >
-              <label
-                style="font-size: 0.85rem; color: #94a3b8;"
-              >
+            <div class="input-group-range">
+              <label>
                 Alignment Force:
                 <span id="align-val">1.0</span>
               </label>
@@ -319,12 +322,8 @@
               >
             </div>
 
-            <div
-              style="display: flex; flex-direction: column; gap: 4px;"
-            >
-              <label
-                style="font-size: 0.85rem; color: #94a3b8;"
-              >
+            <div class="input-group-range">
+              <label>
                 Cohesion Force:
                 <span id="coh-val">1.0</span>
               </label>
@@ -339,17 +338,19 @@
               >
             </div>
 
+            <!-- Export Boids Snapshot Button -->
+            <button id="save-simulation-btn" class="btn-full btn-success mt-sm">
+              Save Snapshot
+            </button>
+
           </div>
 
           <!-- Canvas Rendering Column -->
-          <div
-            style="flex-grow: 1; min-width: 0; display: flex; justify-content: center; background: #090d16; padding: 10px; border-radius: 8px;"
-          >
+          <div class="canvas-container-wrapper">
             <canvas
               id="simulationCanvas"
               width="800"
               height="500"
-              style="background: #0f172a; border-radius: 4px; width: 100%; height: auto; max-width: 100%;"
             ></canvas>
           </div>
 
@@ -357,75 +358,51 @@
       </div>
 
       <!-- Chaotic Attractor Showcase -->
-      <div class="card" style="grid-column: 1 / -1;">
+      <div class="card span-full">
         <h3>Chaotic Attractor Generator (Live WS Stream)</h3>
 
-        <div
-          id="attractor-status"
-          style="font-size: 0.8rem; padding: 6px; border-radius: 4px; text-align: center; background: #334155; margin-bottom: 15px;"
-        >
+        <div id="attractor-status" class="status-badge">
           Disabled
         </div>
 
-        <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+        <div class="showcase-grid">
 
           <!-- Controls -->
-          <div
-            style="display: flex; flex-direction: column; gap: 12px; min-width: 220px;"
-          >
+          <div class="sidebar-section">
 
-            <div
-              style="display: flex; flex-direction: column; gap: 4px;"
-            >
+            <div class="input-group">
               <label for="attractorSelector">
                 <strong>Attractor:</strong>
               </label>
 
-              <select
-                id="attractorSelector"
-                style="width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 4px; border-radius: 4px;"
-              >
-                <option value="clifford">
-                  Clifford Attractor
-                </option>
-
-                <option value="dejong">
-                  De Jong Attractor
-                </option>
-
-                <option value="aizawa">
-                  Aizawa Attractor
-                </option>
-
-                <option value="lorenz">
-                  Lorenz Attractor
-                </option>
+              <select id="attractorSelector">
+                <option value="clifford">Clifford Attractor</option>
+                <option value="dejong">De Jong Attractor</option>
+                <option value="aizawa">Aizawa Attractor</option>
+                <option value="lorenz">Lorenz Attractor</option>
               </select>
             </div>
 
-            <div
-              id="attractor-parameters"
-              style="display: flex; flex-direction: column; gap: 12px;"
-            ></div>
+            <div id="attractor-parameters" class="flex-column gap-sm"></div>
 
-            <button
-              id="resetAttractorBtn"
-              style="width: 100%; background: #2563eb; color: #fff; border: none; padding: 6px; border-radius: 4px; cursor: pointer;"
-            >
+            <button id="resetAttractorBtn" class="btn-full">
               Reset View
             </button>
+
+            <!-- Export Attractor Snapshot Button -->
+            <button id="saveAttractorBtn" class="btn-full btn-success">
+              Save Snapshot
+            </button>
+            <div id="attractor-save-status" class="save-status-text"></div>
 
           </div>
 
           <!-- Canvas -->
-          <div
-            style="flex-grow: 1; min-width: 0; display: flex; justify-content: center; background: #090d16; padding: 10px; border-radius: 8px;"
-          >
+          <div class="canvas-container-wrapper">
             <canvas
               id="attractorCanvas"
               width="800"
               height="500"
-              style="background: #090d16; border-radius: 4px; width: 100%; height: auto; max-width: 100%;"
             ></canvas>
           </div>
 

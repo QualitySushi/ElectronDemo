@@ -11,6 +11,7 @@ let initialized = false
 
 let selector = null
 let resetButton = null
+let saveButton = null
 
 const MAX_RENDER_POINTS = 20000
 
@@ -106,6 +107,40 @@ function resetView() {
     pan.y = 250
 
     redrawCanvas()
+}
+
+async function saveAttractorConfiguration() {
+    const statusEl = document.getElementById('attractor-save-status')
+
+    const payload = {
+        simulation_type: 'attractor',
+        sub_type: selectedAttractor,
+        configuration: DEFAULT_PARAMS[selectedAttractor]
+    }
+
+    console.log('[Attractor] Saving configuration via IPC...', payload)
+
+    try {
+        const result = await window.versions.saveSimulation(payload)
+
+        if (result && result.success) {
+            if (statusEl) {
+                statusEl.textContent = 'Attractor configuration saved to history!'
+                statusEl.style.color = '#38bdf8'
+            }
+        } else {
+            if (statusEl) {
+                statusEl.textContent = result?.error || 'Failed to save configuration.'
+                statusEl.style.color = '#ef4444'
+            }
+        }
+    } catch (err) {
+        console.error('[Attractor] Error invoking save IPC:', err)
+        if (statusEl) {
+            statusEl.textContent = 'Error while saving history.'
+            statusEl.style.color = '#ef4444'
+        }
+    }
 }
 
 function getSliderRange(type, key) {
@@ -577,6 +612,18 @@ export function initAttractorModule() {
         )
     }
 
+    saveButton =
+        document.getElementById(
+            'saveAttractorBtn'
+        )
+
+    if (saveButton) {
+        saveButton.addEventListener(
+            'click',
+            saveAttractorConfiguration
+        )
+    }
+
     createParameterControls()
 
     resetView()
@@ -609,8 +656,16 @@ export function destroyAttractorModule() {
         )
     }
 
+    if (saveButton) {
+        saveButton.removeEventListener(
+            'click',
+            saveAttractorConfiguration
+        )
+    }
+
     selector = null
     resetButton = null
+    saveButton = null
 
     if (socket) {
         socket.close()

@@ -4,6 +4,8 @@ const globeContainer = document.getElementById('globeContainer')
 const satStatusEl = document.getElementById('sat-status')
 const satSelector = document.getElementById('satSelector')
 const refreshSatBtn = document.getElementById('refreshSatBtn')
+const saveSatBtn = document.getElementById('exportSatSnapshotBtn')
+const satSaveStatusEl = document.getElementById('sat-save-status')
 const satXEl = document.getElementById('sat-x')
 const satYEl = document.getElementById('sat-y')
 const satZEl = document.getElementById('sat-z')
@@ -128,6 +130,13 @@ export function initGlobeModule() {
         )
     }
 
+    if (saveSatBtn) {
+        saveSatBtn.addEventListener(
+            'click',
+            saveSatelliteConfiguration
+        )
+    }
+
     animateGlobe()
 
     fetchSatelliteSnapshot()
@@ -182,6 +191,11 @@ export function destroyGlobeModule() {
     refreshSatBtn?.removeEventListener(
         'click',
         fetchSatelliteSnapshot
+    )
+
+    saveSatBtn?.removeEventListener(
+        'click',
+        saveSatelliteConfiguration
     )
 
     satelliteMeshes.forEach((mesh) => {
@@ -318,6 +332,55 @@ function handleSatelliteSelection(event) {
         updateSatellitesInScene(
             window._lastSatellitesData
         )
+    }
+}
+
+async function saveSatelliteConfiguration() {
+    if (!window._lastSatellitesData || window._lastSatellitesData.length === 0) {
+        if (satSaveStatusEl) {
+            satSaveStatusEl.textContent = 'No satellite data available to save.'
+            satSaveStatusEl.style.color = '#ef4444'
+        }
+        return
+    }
+
+    const primarySat = window._lastSatellitesData.find(
+        (sat) => (sat.id || sat.name) === selectedSatId
+    ) || window._lastSatellitesData[0]
+
+    const payload = {
+        simulation_type: 'satellite',
+        sub_type: primarySat.id || primarySat.name || 'default',
+        configuration: {
+            x: primarySat.x,
+            y: primarySat.y,
+            z: primarySat.z,
+            time: primarySat.time || new Date().toISOString()
+        }
+    }
+
+    console.log('[Globe] Saving configuration to database...', payload)
+
+    try {
+        const result = await window.versions.saveSimulation(payload)
+
+        if (result && result.success) {
+            if (satSaveStatusEl) {
+                satSaveStatusEl.textContent = 'Satellite state saved to history!'
+                satSaveStatusEl.style.color = '#38bdf8'
+            }
+        } else {
+            if (satSaveStatusEl) {
+                satSaveStatusEl.textContent = result?.error || 'Failed to save configuration.'
+                satSaveStatusEl.style.color = '#ef4444'
+            }
+        }
+    } catch (err) {
+        console.error('[Globe] Error invoking save IPC:', err)
+        if (satSaveStatusEl) {
+            satSaveStatusEl.textContent = 'Error while saving history.'
+            satSaveStatusEl.style.color = '#ef4444'
+        }
     }
 }
 

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+    >
+    <title>Electron Showcase - Authentication</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="auth-body">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h2 id="formTitle" class="auth-title">Welcome Back</h2>
+        <p id="formSubtitle" class="auth-subtitle">
+          Log in to access your saved simulation history and configurations.
+        </p>
+
+        <!-- Mode Switch Tabs -->
+        <div class="tab-container">
+          <button type="button" id="tabLogin" class="tab-btn active">Log In</button>
+          <button type="button" id="tabRegister" class="tab-btn">Register</button>
+        </div>
+      </div>
+
+      <div id="authForm">
+        <div class="input-group">
+          <label>Username</label>
+          <input type="text" id="usernameInput" required placeholder="e.g. QualitySushi" />
+        </div>
+
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="passwordInput" required placeholder="••••••••" />
+        </div>
+
+        <div id="statusMessage" class="hidden auth-status"></div>
+
+        <button type="button" id="submitBtn" class="submit-btn">Sign In</button>
+      </div>
+    </div>
+
+    <script>
+      let currentMode = 'login';
+
+      const tabLogin = document.getElementById('tabLogin');
+      const tabRegister = document.getElementById('tabRegister');
+      const formTitle = document.getElementById('formTitle');
+      const formSubtitle = document.getElementById('formSubtitle');
+      const submitBtn = document.getElementById('submitBtn');
+      const statusMessage = document.getElementById('statusMessage');
+
+      tabLogin.addEventListener('click', () => {
+        currentMode = 'login';
+        tabLogin.className = "tab-btn active";
+        tabRegister.className = "tab-btn";
+        formTitle.textContent = "Welcome Back";
+        formSubtitle.textContent = "Log in to access your saved simulation history and configurations.";
+        submitBtn.textContent = "Sign In";
+        statusMessage.classList.add('hidden');
+      });
+
+      tabRegister.addEventListener('click', () => {
+        currentMode = 'register';
+        tabRegister.className = "tab-btn active";
+        tabLogin.className = "tab-btn";
+        formTitle.textContent = "Create an Account";
+        formSubtitle.textContent = "Register to persist your maritime mesh and satellite telemetry setups.";
+        submitBtn.textContent = "Create Account";
+        statusMessage.classList.add('hidden');
+      });
+
+      submitBtn.addEventListener('click', async () => {
+        statusMessage.classList.add('hidden');
+        statusMessage.className = "hidden auth-status";
+
+        const username = document.getElementById('usernameInput').value;
+        const password = document.getElementById('passwordInput').value;
+
+        if (!username || !password) {
+          statusMessage.textContent = 'Please fill in all fields.';
+          statusMessage.classList.add('auth-error');
+          statusMessage.classList.remove('hidden');
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Processing...";
+
+        try {
+          let success = false;
+          if (currentMode === 'login') {
+            success = await window.versions.login({ username, password });
+          } else {
+            success = await window.versions.register({ username, password });
+          }
+
+          if (success) {
+            statusMessage.textContent = currentMode === 'login' 
+              ? 'Successfully logged in! Loading app...' 
+              : 'Account created successfully! Loading app...';
+            statusMessage.classList.add('auth-success');
+            statusMessage.classList.remove('hidden');
+
+            setTimeout(() => {
+              window.location.href = 'index.html';
+            }, 800);
+          } else {
+            statusMessage.textContent = currentMode === 'login'
+              ? 'Invalid username or password.'
+              : 'Registration failed. Username may already be taken.';
+            statusMessage.classList.add('auth-error');
+            statusMessage.classList.remove('hidden');
+          }
+        } catch (err) {
+          console.error(err);
+          statusMessage.textContent = 'A connection error occurred.';
+          statusMessage.classList.add('auth-error');
+          statusMessage.classList.remove('hidden');
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = currentMode === 'login' ? 'Sign In' : 'Create Account';
+        }
+      });
+    </script>
+  </body>
+</html>
